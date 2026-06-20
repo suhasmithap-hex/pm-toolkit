@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PM Tools</title>
+<style>
+/* Root styling */
+body {
+  font-family: Arial, sans-serif;
+  background: #ffffff;
+  margin: 0;
+  padding: 10px;
+}
+
+.pm-tools {
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+}
+
+/* GRID — Row 1: 3 widgets; Row 2: Estimator + Schedule */
+.pm-tools .tools-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
+  gap: 14px;
+  padding: 10px;
+}
+
+/* Generic tool box */
+.pm-tools .tool-box {
+  background: #F8FCFF;
+  border: 1px solid #9BD5EF;
+  border-radius: 10px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Headers */
+.pm-tools .tool-header {
+  background: #9BD5EF;
+  padding: 6px 8px;
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: bold;
+  color: #1E3A5F;
+  border-radius: 10px 10px 0 0;
+}
+.pm-tools .tool-header .icon {
+  font-size: 15px;
+  margin-right: 6px;
+}
+
+/* Body + inputs */
+.pm-tools .tool-body { padding: 8px; }
+.pm-tools .tool-body input {
+  width: 100%;
+  padding: 4px;
+  margin-bottom: 6px;
+  font-size: 11px;
+  border: 1px solid #9BD5EF;
+  border-radius: 6px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+/* Buttons */
+.pm-tools button {
+  background: #9BD5EF;
+  border: none;
+  padding: 4px 10px;
+  font-size: 11px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #1E3A5F;
+  font-weight: bold;
+}
+.pm-tools button:hover { background: #78c3e2; }
+.pm-tools .button-row { text-align: right; }
+
+/* Toggle */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 18px;
+}
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider {
+  position: absolute; cursor: pointer;
+  top:0; left:0; right:0; bottom:0;
+  background:#d6d6d6; transition:.2s;
+  border-radius:18px;
+}
+.slider:before {
+  position:absolute; content:"";
+  height:14px; width:14px; left:2px; bottom:2px;
+  background:#fff; transition:.2s;
+  border-radius:50%;
+}
+.switch input:checked + .slider { background:#9BD5EF; }
+.switch input:checked + .slider:before { transform:translateX(20px); }
+
+.pm-tools .warning { color:red; font-size:11px; }
+.pm-tools .result { margin-top:5px; font-size:11px; }
+
+/* Phase rows inside Effort Estimator */
+.pm-tools .phase-row {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:3px;
+}
+.pm-tools .phase-row span {
+  font-size:11px;
+}
+.pm-tools .phase-row input {
+  width:60px;
+  margin-bottom:0;
+}
+
+/* Schedule Table */
+.pm-tools .schedule-table { margin-top: 8px; }
+.pm-tools table.schedule {
+  border-collapse: collapse;
+  font-size: 11px;
+  width: auto;          /* width grows based on weeks */
+}
+.pm-tools table.schedule th,
+.pm-tools table.schedule td {
+  border: 1px solid #9BD5EF;
+  padding: 4px;
+  text-align: center;
+}
+.pm-tools .filled { background: #9BD5EF; }
+
+/* Layout assignments */
+.pm-tools .tool-box.estimator-box { grid-column: 1; }
+.pm-tools .tool-box.schedule-box { grid-column: 2 / span 2; }
+
+@media (max-width: 800px) {
+  .pm-tools .tools-grid { grid-template-columns:1fr; }
+  .pm-tools .tool-box.estimator-box,
+  .pm-tools .tool-box.schedule-box { grid-column:1; }
+}
+.pm-header {
+    background: #F8FCFF;
+    border: 1px solid #9BD5EF;
+    border-radius: 12px;
+    margin: 10px;
+    padding: 20px;
+}
+
+.pm-header-content h1 {
+    margin: 0;
+    color: #1E3A5F;
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.pm-header-content p {
+    margin-top: 8px;
+    color: #4A5568;
+    font-size: 14px;
+    line-height: 1.5;
+    max-width: 900px;
+}
+.pm-tagline {
+    margin-top: 12px;
+    display: inline-block;
+    background: #9BD5EF;
+    color: #1E3A5F;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+</style>
+</head>
+<body>
+<div class="pm-header">
+    <div class="pm-header-content">
+        <h1>PM Toolkit</h1>
+
+        <p>
+            A collection of practical project management tools developed from
+            real-world delivery experience across software projects, managed services,
+            and enterprise transformations.
+        </p>
+
+        <div class="pm-tagline">
+            Built by Suhasmitha
+        </div>
+    </div>
+</div>
+<div class="pm-tools">
+  <div class="tools-grid">
+
+    <!-- GM Calculator -->
+    <div class="tool-box">
+      <div class="tool-header"><span class="icon">🧮</span>Margin Calculator</div>
+      <div class="tool-body">
+        Revenue:<input id="gmRevenue" type="number">
+        Cost:<input id="gmCost" type="number">
+        Contingency %:<input id="gmCont" type="number">
+        <div class="button-row"><button onclick="gmCalc()">Calculate</button></div>
+        <div id="gmResult" class="result"></div>
+      </div>
+    </div>
+
+    <!-- Revenue Projection -->
+    <div class="tool-box">
+      <div class="tool-header"><span class="icon">📈</span>Revenue Planner</div>
+      <div class="tool-body">
+        Cost:<input id="revCost" type="number">
+        Contingency %:<input id="revCont" type="number">
+        GM %:<input id="revGM" type="number">
+        <div class="button-row"><button onclick="revCalc()">Calculate</button></div>
+        <div id="revResult" class="result"></div>
+      </div>
+    </div>
+
+    <!-- Costing Calculator -->
+    <div class="tool-box">
+      <div class="tool-header"><span class="icon">💰</span>Cost Calculator</div>
+      <div class="tool-body">
+        Revenue:<input id="costRevenue" type="number">
+        GM %:<input id="costGM" type="number">
+        <div class="button-row"><button onclick="costCalc()">Calculate</button></div>
+        <div id="costResult" class="result"></div>
+      </div>
+    </div>
+
+    <!-- Effort Estimator -->
+    <div class="tool-box estimator-box">
+      <div class="tool-header"><span class="icon">⏱</span>Effort Estimator</div>
+      <div class="tool-body">
+
+        <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+          Units (off = Hours, on = PD):
+          <label class="switch">
+            <input type="checkbox" id="unitToggle" onchange="onToggleUnit()">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        Dev + UT Effort (Y):<input id="devValue" type="number">
+        Dev+UT as % of Total:<input id="devPct" type="number" value="40">
+        1 PD = <input id="hoursPerDay" type="number" value="8" style="width:60px;"> hours
+
+        <br><b>Phase Percentages (excluding Dev+UT)</b>
+        <div class="phase-row"><span>Requirements %</span><input id="pReq" type="number" value="20"></div>
+        <div class="phase-row"><span>Design %</span><input id="pDes" type="number" value="15"></div>
+        <div class="phase-row"><span>Testing %</span><input id="pTest" type="number" value="15"></div>
+        <div class="phase-row"><span>UAT %</span><input id="pUAT" type="number" value="5"></div>
+        <div class="phase-row"><span>Hypercare %</span><input id="pHC" type="number" value="5"></div>
+
+        <div class="button-row"><button onclick="effCalc()">Calculate</button></div>
+
+        <div id="pctWarn" class="warning"></div>
+        <div id="effortResult" class="result"></div>
+      </div>
+    </div>
+
+    <!-- Schedule Generator -->
+    <div class="tool-box schedule-box">
+      <div class="tool-header"><span class="icon">📅</span>Schedule Generator</div>
+      <div class="tool-body">
+
+        <div style="display:flex; gap:10px; margin-bottom:6px;">
+          Developers:<input id="devCount" type="number" value="1" style="width:60px; margin-bottom:0;">
+          Dev Boost %:<input id="devBoost" type="number" value="30" style="width:60px; margin-bottom:0;">
+        </div>
+
+        <div style="display:flex; gap:10px; margin-bottom:6px;">
+          Testers:<input id="testerCount" type="number" value="1" style="width:60px; margin-bottom:0;">
+          Tester Boost %:<input id="testerBoost" type="number" value="80" style="width:60px; margin-bottom:0;">
+        </div>
+
+        <div style="display:flex; gap:6px; margin-bottom:6px;">
+          <button onclick="generateSchedule()">Generate</button>
+          <button onclick="exportCSV()">Export CSV</button>
+        </div>
+
+        <div id="totalWeeksLabel" style="font-size:11px; margin-bottom:4px;"></div>
+
+        <div id="scheduleGrid" class="schedule-table"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+window.pmEffort = null;
+window.pmSchedule = null;
+let isPD = false;
+
+/* Toggle Hours/PD */
+function onToggleUnit() {
+  const hpd = +hoursPerDay.value || 8;
+  const val = +devValue.value;
+  if (!val) {
+    isPD = unitToggle.checked;
+    return;
+  }
+  if (!isPD && unitToggle.checked) {
+    devValue.value = (val / hpd).toFixed(2);
+    isPD = true;
+  } else if (isPD && !unitToggle.checked) {
+    devValue.value = (val * hpd).toFixed(1);
+    isPD = false;
+  }
+  if (effortResult.innerHTML.trim() !== "") {
+    effCalc();
+  }
+}
+
+/* GM calc */
+function gmCalc(){
+  const rev = +gmRevenue.value;
+  const cost = +gmCost.value;
+  const contPct = (+gmCont.value || 0) / 100;
+  if (!rev || !cost) {
+    gmResult.innerHTML = "Enter Revenue & Cost";
+    return;
+  }
+  const finalCost = cost * (1 + contPct);
+  const gm = ((rev - finalCost) / rev) * 100;
+  gmResult.innerHTML =
+    "Final Cost: " + finalCost.toFixed(2) + "<br>GM: " + gm.toFixed(2) + "%";
+}
+
+/* Revenue projection */
+function revCalc(){
+  const cost = +revCost.value;
+  const contPct = (+revCont.value || 0) / 100;
+  const gmPct = +revGM.value;
+  if (!cost || gmPct <= 0 || gmPct >= 100) {
+    revResult.innerHTML = "Invalid inputs";
+    return;
+  }
+  const finalCost = cost * (1 + contPct);
+  const gm = gmPct / 100;
+  const rev = finalCost / (1 - gm);
+  revResult.innerHTML =
+    "Final Cost: " + finalCost.toFixed(2) + "<br>Revenue: " + rev.toFixed(2);
+}
+
+/* Cost reverse calc */
+function costCalc(){
+  const rev = +costRevenue.value;
+  const gmPct = +costGM.value;
+  if (!rev || gmPct <= 0 || gmPct >= 100) {
+    costResult.innerHTML = "Invalid inputs";
+    return;
+  }
+  const max = rev * (1 - gmPct / 100);
+  costResult.innerHTML = "Max Cost: " + max.toFixed(2);
+}
+
+/* Effort estimator with phase % auto-balance */
+function effCalc(){
+  const Y = +devValue.value;
+  const xPct = +devPct.value;
+  const x = xPct / 100;
+  const hpd = +hoursPerDay.value || 8;
+
+  let reqP  = +pReq.value  || 0;
+  let desP  = +pDes.value  || 0;
+  let testP = +pTest.value || 0;
+  let uatP  = +pUAT.value  || 0;
+  let hcP   = +pHC.value   || 0;
+
+  effortResult.innerHTML = "";
+  pctWarn.innerHTML = "";
+
+  if (!Y || !x || x <= 0 || x >= 1) {
+    effortResult.innerHTML = "Enter valid Dev+UT effort and Dev% (0–100).";
+    return;
+  }
+
+  const remainingAllowed = 100 - xPct;
+  if (remainingAllowed < 0) {
+    pctWarn.innerHTML = "Dev% cannot exceed 100%.";
+    return;
+  }
+
+  let remainingSum = reqP + desP + testP + uatP + hcP;
+  let autoAdjusted = false;
+
+  if (remainingAllowed > 0) {
+    if (remainingSum <= 0) {
+      // default pattern: 20,15,30,20,15 scaled
+      const base = [20, 15, 30, 20, 15];
+      const baseSum = 20 + 15 + 30 + 20 + 15;
+      const scale = remainingAllowed / baseSum;
+      reqP  = base[0] * scale;
+      desP  = base[1] * scale;
+      testP = base[2] * scale;
+      uatP  = base[3] * scale;
+      hcP   = base[4] * scale;
+      autoAdjusted = true;
+    } else if (Math.abs(remainingSum - remainingAllowed) > 0.01) {
+      const scale = remainingAllowed / remainingSum;
+      reqP  *= scale;
+      desP  *= scale;
+      testP *= scale;
+      uatP  *= scale;
+      hcP   *= scale;
+      autoAdjusted = true;
+    }
+  } else {
+    // remainingAllowed = 0 → all effort is Dev
+    reqP = desP = testP = uatP = hcP = 0;
+    autoAdjusted = true;
+  }
+
+  if (autoAdjusted) {
+    pReq.value  = reqP.toFixed(1);
+    pDes.value  = desP.toFixed(1);
+    pTest.value = testP.toFixed(1);
+    pUAT.value  = uatP.toFixed(1);
+    pHC.value   = hcP.toFixed(1);
+    pctWarn.innerHTML =
+      "Phase % auto-balanced to " + remainingAllowed.toFixed(1) +
+      "% (remaining after Dev).";
+  }
+
+  const hrsDevPlus = isPD ? Y * hpd : Y;
+  const totalHrs   = hrsDevPlus / x;
+
+  const hrsReq  = totalHrs * (reqP  / 100);
+  const hrsDes  = totalHrs * (desP  / 100);
+  const hrsTest = totalHrs * (testP / 100);
+  const hrsUAT  = totalHrs * (uatP  / 100);
+  const hrsHC   = totalHrs * (hcP   / 100);
+  const hrsDev  = totalHrs * x; // dev portion
+
+  const daysReq  = hrsReq  / hpd;
+  const daysDes  = hrsDes  / hpd;
+  const daysDev  = hrsDev  / hpd;
+  const daysTest = hrsTest / hpd;
+  const daysUAT  = hrsUAT  / hpd;
+  const daysHC   = hrsHC   / hpd;
+
+  window.pmEffort = {
+    req:  daysReq,
+    des:  daysDes,
+    dev:  daysDev,
+    test: daysTest,
+    uat:  daysUAT,
+    hc:   daysHC
+  };
+
+  function fmt(h){
+    return isPD ? (h / hpd).toFixed(2) + " PD" : h.toFixed(1) + " hrs";
+  }
+
+  effortResult.innerHTML =
+    "<b>Total Effort:</b> " + fmt(totalHrs) + "<br>" +
+    "Requirements: " + fmt(hrsReq) + "<br>" +
+    "Design: "      + fmt(hrsDes) + "<br>" +
+    "Development: " + fmt(hrsDev) + "<br>" +
+    "Testing: "     + fmt(hrsTest) + "<br>" +
+    "UAT: "         + fmt(hrsUAT) + "<br>" +
+    "Hypercare: "   + fmt(hrsHC);
+
+  scheduleGrid.innerHTML = "";
+  totalWeeksLabel.innerHTML = "";
+  window.pmSchedule = null;
+}
+
+/* Schedule generator with Dev & Tester boosts */
+
+function generateSchedule(){
+  if (!window.pmEffort) {
+    scheduleGrid.innerHTML = "Run Effort Estimator first.";
+    return;
+  }
+
+  const d = window.pmEffort;
+
+  // FIX: always use getElementById
+  const devCnt = Math.max(1, +(document.getElementById("devCount").value) || 1);
+  const devBoostPct = +(document.getElementById("devBoost").value) || 0;
+  const devBoost = devBoostPct / 100;
+
+  const testerCnt = Math.max(1, +(document.getElementById("testerCount").value) || 1);
+  const testerBoostPct = +(document.getElementById("testerBoost").value) || 0;
+  const testerBoost = testerBoostPct / 100;
+
+  const reqDays0  = d.req  || 0;
+  const desDays0  = d.des  || 0;
+  const devDays0  = d.dev  || 0;
+  const testDays0 = d.test || 0;
+  const uatDays0  = d.uat  || 0;
+  const hcDays0   = d.hc   || 0;
+
+  // Apply developer boost to Design & Dev
+  const devFactor = 1 + (devCnt - 1) * devBoost;
+  const adjDes = devFactor > 0 ? desDays0 / devFactor : desDays0;
+  const adjDev = devFactor > 0 ? devDays0 / devFactor : devDays0;
+
+  // Apply tester boost to Testing
+  const testFactor = 1 + (testerCnt - 1) * testerBoost;
+  const adjTest = testFactor > 0 ? testDays0 / testFactor : testDays0;
+
+  const totalDays = reqDays0 + adjDes + adjDev + adjTest + uatDays0 + hcDays0;
+  const weeks = Math.max(1, Math.ceil(totalDays / 5));
+
+  totalWeeksLabel.innerHTML = "Total Project Weeks: " + weeks;
+
+  const phases = [
+    ["Requirements", reqDays0],
+    ["Design",       adjDes],
+    ["Development",  adjDev],
+    ["Testing",      adjTest],
+    ["UAT",          uatDays0],
+    ["Hypercare",    hcDays0]
+  ];
+
+  let html = "<table class='schedule'><tr><th>Phase</th>";
+  for (let i = 1; i <= weeks; i++) html += "<th>W" + i + "</th>";
+  html += "</tr>";
+
+  let start = 0;
+  const sched = [];
+
+  phases.forEach(([name, pd]) => {
+    const cells = [];
+    html += "<tr><td>" + name + "</td>";
+    for (let w = 0; w < weeks; w++) {
+      const wkStart = w * 5, wkEnd = wkStart + 5;
+      const fill = pd > 0 && start < wkEnd && (start + pd) > wkStart;
+      cells.push(fill ? 1 : 0);
+      html += fill ? "<td class='filled'></td>" : "<td></td>";
+    }
+    html += "</tr>";
+    sched.push({ name, cells });
+    start += pd;
+  });
+
+  html += "</table>";
+  scheduleGrid.innerHTML = html;
+
+  window.pmSchedule = { weeks, sched };
+}
+
+
+/* Export CSV (schedule only) */
+function exportCSV(){
+  if (!window.pmSchedule) {
+    alert("Generate schedule first.");
+    return;
+  }
+  const { weeks, sched } = window.pmSchedule;
+  let csv = "Phase," + [...Array(weeks).keys()].map(i => "W" + (i + 1)).join(",") + "\n";
+  sched.forEach(r => {
+    csv += r.name + "," + r.cells.join(",") + "\n";
+  });
+  const blob = new Blob([csv], { type: "text/csv" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "schedule.csv";
+  a.click();
+}
+</script>
+
+</body>
+</html>
